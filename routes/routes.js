@@ -44,7 +44,6 @@ function checkPrecedent(req, res, next){ // tries to jump isAuthenticated() if i
 
 function checkFormData(req, res, next){ // test for some rules in register form
   let formErrors = registerCheck(req.body)
-  console.log(formErrors)
   if(formErrors.length===0){
     next();
   }else{
