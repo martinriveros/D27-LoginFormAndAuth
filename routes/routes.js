@@ -1,34 +1,53 @@
-const { Router } = require('express');
-const router = Router();
-const usersHandler = require('../components/users/usersHandler')
+const { Router } =          require("express");
+const passport =            require('passport');
+const registerCheck =       require ('../components/users/usersServices/registerCheck')
+const router =              Router();
+const usersHandler =        require("../components/users/usersHandlers/usersHandler");
 
-module.exports = (app)=> {
-
-  app.use("/", router);
-
-  router.get('/registro', isLogged,usersHandler.userRegisterForm)
-  router.post('/registro', usersHandler.userRegister)
+module.exports = (app) => {
   
-  router.get('/login', isLogged,usersHandler.userLoginForm)
-  router.post('/login', usersHandler.userLogin)
+  app.use("/", router);
+  
+  router.get("/login", checkPrecedent ,usersHandler.userLoginForm);
+  router.post("/login", passport.authenticate('login', {failureRedirect: '/faillogin', successRedirect: '/protectedContent'}));
+  router.get("/faillogin", usersHandler.userFailLogin);
+  
+  router.get("/registro", usersHandler.userRegisterForm);
+  router.post("/registro", checkFormData ,passport.authenticate('registro', {failureRedirect: '/failregistro', successRedirect: '/login'}));
+  router.get("/registro", usersHandler.userFailRegistro);
 
-  router.get('/protectedContent', isLoggedVerify,usersHandler.protectedContent)
+  router.get(
+    "/protectedContent", checkForAuth,  usersHandler.protectedContent);
 
-  router.get('/welcome', usersHandler.getWelcomePage)
-}
+  router.get("/welcome", usersHandler.getWelcomePage);
+  router.get("/logout", usersHandler.logout);
 
-function isLogged (req, res, next){
-  if(req.session.isLogged){
-    res.redirect('/protectedContent')
-  } else {
+  router.get('*', usersHandler.notMatchingRoute)
+};
+
+
+function checkForAuth (req, res, next){
+  if(req.isAuthenticated()){
     next()
-  }
-}
-function isLoggedVerify(req, res, next){
-  if(req.session.isLogged){
-    next()
-  } else {
+  }else{
     res.redirect('/login')
   }
 }
 
+function checkPrecedent(req, res, next){ // tries to jump isAuthenticated() if it comes from /registro
+
+  if(req.rawHeaders[27]==='http://localhost:8080/registro'){
+    req.comesFromRegistro=true
+  }
+    next();
+}
+
+function checkFormData(req, res, next){ // test for some rules in register form
+  let formErrors = registerCheck(req.body)
+  console.log(formErrors)
+  if(formErrors.length===0){
+    next();
+  }else{
+    res.render("layouts/userRegister", {formErrors, ...req.body})
+  }
+}

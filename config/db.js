@@ -19,7 +19,7 @@ let connection = null;
 
 const usersSchema = new Schema({
 
-    username: {
+    name: {
             type: String,
             required:true
     },  
