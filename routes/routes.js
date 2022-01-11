@@ -22,7 +22,10 @@ module.exports = (app) => {
   router.get("/welcome", usersHandler.getWelcomePage);
   router.get("/logout", usersHandler.logout);
 
+  router.get('/info', usersHandler.getArgvInfo)
+  router.get('/api/randoms', usersHandler.getRandoms)
   router.get('*', usersHandler.notMatchingRoute)
+
 };
 
 
